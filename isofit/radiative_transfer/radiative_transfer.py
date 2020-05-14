@@ -27,16 +27,18 @@ from ..radiative_transfer.six_s import SixSRT
 from ..radiative_transfer.libradtran import LibRadTranRT
 from isofit.configs import Config
 from isofit.configs.sections.radiative_transfer_config import RadiativeTransferEngineConfig
+from isofit.core.common import load_spectrum
 
-
+import matplotlib.pyplot as plt
+import pdb
 class RadiativeTransfer():
     """This class controls the radiative transfer component of the forward
     model. An ordered dictionary is maintained of individual RTMs (MODTRAN,
-    for example). We loop over the dictionary concatenating the radiation 
+    for example). We loop over the dictionary concatenating the radiation
     and derivatives from each RTM and interval to form the complete result.
 
     In general, some of the state vector components will be shared between
-    RTMs and bands. For example, H20STR is shared between both VISNIR and 
+    RTMs and bands. For example, H20STR is shared between both VISNIR and
     TIR. This class maintains the master list of statevectors.
     """
 
@@ -115,18 +117,58 @@ class RadiativeTransfer():
         return self.pack_arrays(ret)
 
     def calc_rdn(self, x_RT, rfl, Ls, geom):
+        '''
+        L_atm is the path radiance. In the VSWIR case, it is calculated by running modtran with zero reflectance,
+        and taking the "TOTAL_RAD" output, divided by the TOA solar irradiance. The TIR case is thermal upwelling.
+
+        L_down_transmittence is the product of the global downwelling flux and the total (direct+diffuse) transmittence.
+        The global flux is calculated by adjusting the TOA Solar Irrad product to radiance units (cos * pi-1)
+        The global tranmittence is the sum of the A and B coefficients calculated by modtran, convolved and written to .chn.
+
+        '''
+        #pdb.set_trace()
         r = self.get(x_RT, geom)
         L_atm = self.get_L_atm(x_RT, geom)
         L_down_transmitted = self.get_L_down_transmitted(x_RT, geom)
 
         L_up = self.get_L_up(x_RT, geom)
         L_up = L_up + Ls * r['transup']
-
+        '''
         ret = L_atm + \
             L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl) + \
             L_up
 
+        '''
+        #trans_dir = self.get_transm_dir
+        #trans_dif = self.get_trans_dif
+        I = self.get_Solar_Illumination(x_RT, geom)
+        #bck_rfl = self.get_background_reflectance()
+        #nbr_rfl =
+        bck_rfl = rfl
+        #pdb.set_trace()
+        ret = L_atm + \
+            I / (1.0-r['sphalb'] * bck_rfl) * bck_rfl * r['transm_dif'] + \
+            I / (1.0-r['sphalb'] * bck_rfl) * rfl * r['transm_dir'] + \
+            L_up
+        #pdb.set_trace()
+
         return ret
+
+
+
+    def get_Solar_Illumination(self, x_RT, geom):
+        Illum = []
+        for RT in self.rt_engines:
+            Illum.append(RT.get_illumination(x_RT, geom))
+        return np.hstack(Illum)
+
+
+    def get_background_reflectance(self):
+        file2use = '/Users/carmon/20200508_adjacency/outputs/smoothed_background.txt'
+        ref = np.asarray(load_spectrum(file2use))
+        ref = ref[0,:]
+        return ref
+
 
     def get_L_atm(self, x_RT, geom):
         L_atms = []

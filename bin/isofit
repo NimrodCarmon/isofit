@@ -24,7 +24,7 @@ import logging
 
 from isofit.core.isofit import Isofit
 from isofit import __version__
-
+import pdb
 
 def main():
 
@@ -45,9 +45,8 @@ def main():
     profile = args.profile
 
     logging.basicConfig(format='%(message)s', level=level)
-
     isofit = Isofit(config_file=config, level=level, row_column=row_column, profile=profile)
-    
+
     return isofit.run()
 
 
