@@ -142,13 +142,15 @@ class RadiativeTransfer():
         #trans_dir = self.get_transm_dir
         #trans_dif = self.get_trans_dif
         I = self.get_Solar_Illumination(x_RT, geom)
-        #bck_rfl = self.get_background_reflectance()
+        bck_rfl = self.get_background_reflectance()
+        neigh_rfl = self.get_neighbor_reflectance()
         #nbr_rfl =
-        bck_rfl = rfl
+        #bck_rfl = rfl
+        #neigh_rfl = rfl
         #pdb.set_trace()
         ret = L_atm + \
-            I / (1.0-r['sphalb'] * bck_rfl) * bck_rfl * r['transm_dif'] + \
-            I / (1.0-r['sphalb'] * bck_rfl) * rfl * r['transm_dir'] + \
+            I / (1.0-r['sphalb'] * bck_rfl) * neigh_rfl * r['transm_dif'] + \
+            I / (1.0-r['sphalb'] * bck_rfl) * 0.86 * rfl * r['transm_dir'] + \
             L_up
         #pdb.set_trace()
 
@@ -162,9 +164,14 @@ class RadiativeTransfer():
             Illum.append(RT.get_illumination(x_RT, geom))
         return np.hstack(Illum)
 
+    def get_neighbor_reflectance(self):
+        file2use = 'outputs/Backman_neighbors_ref.txt'
+        ref = np.asarray(load_spectrum(file2use))
+        ref = ref[0,:]
+        return ref
 
     def get_background_reflectance(self):
-        file2use = '/Users/carmon/20200508_adjacency/outputs/smoothed_background.txt'
+        file2use = 'outputs/background_ref.txt'
         ref = np.asarray(load_spectrum(file2use))
         ref = ref[0,:]
         return ref
