@@ -31,7 +31,7 @@ from isofit.configs import Config
 from isofit.core.forward import ForwardModel
 from isofit.configs.sections.implementation_config import InversionConfig
 
-
+import pdb
 ### Variables ###
 
 error_code = -1
@@ -138,8 +138,8 @@ class Inversion:
 
 
     def calc_prior(self, x, geom):
-        """Calculate prior distribution of radiance. This depends on the 
-        location in the state space. Return the inverse covariance and 
+        """Calculate prior distribution of radiance. This depends on the
+        location in the state space. Return the inverse covariance and
         its square root (for non-quadratic error residual calculation)."""
 
         xa = self.fm.xa(x, geom)
@@ -148,7 +148,7 @@ class Inversion:
         return xa, Sa, Sa_inv, Sa_inv_sqrt
 
     def calc_posterior(self, x, geom, meas):
-        """Calculate posterior distribution of state vector. This depends 
+        """Calculate posterior distribution of state vector. This depends
         both on the location in the state space and the radiance (via noise)."""
 
         xa = self.fm.xa(x, geom)
@@ -174,8 +174,8 @@ class Inversion:
 
     def calc_Seps(self, x, meas, geom):
         """Calculate (zero-mean) measurement distribution in radiance terms.
-        This depends on the location in the state space. This distribution is 
-        calculated over one or more subwindows of the spectrum. Return the 
+        This depends on the location in the state space. This distribution is
+        calculated over one or more subwindows of the spectrum. Return the
         inverse covariance and its square root."""
 
         Seps = self.fm.Seps(x, meas, geom)
@@ -356,6 +356,12 @@ class Inversion:
                 logging.warning('Optimization failed to converge')
                 solutions.append(trajectory)
                 costs.append(9e99)
+<<<<<<< HEAD
+=======
+        #pdb.set_trace()
+        return np.array(solutions[np.argmin(costs)])
+        #return np.array(solutions)
+>>>>>>> test
 
         final_solution = np.array(solutions[np.argmin(costs)])
         return final_solution

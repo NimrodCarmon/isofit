@@ -34,8 +34,15 @@ from ..core.common import json_load_ascii, recursive_replace
 from ..core.common import VectorInterpolator
 from isofit.configs.sections.radiative_transfer_config import RadiativeTransferEngineConfig
 from isofit.configs import Config
+<<<<<<< HEAD
 from isofit.core.geometry import Geometry
+=======
+
+import pdb
+
+>>>>>>> test
 import subprocess
+
 
 
 ### Variables ###
@@ -89,7 +96,7 @@ class ModtranRT(TabularRT):
             self.aer_extc = np.array(aer_extc)
             self.aer_asym = np.array(aer_asym)
 
-        self.modtran_lut_names = ['rhoatm', 'transm', 'sphalb', 'transup']
+        self.modtran_lut_names = ['rhoatm', 'transm', 'sphalb', 'transup', 'transm_dir', 'transm_dif']
         if self.treat_as_emissive:
             self.modtran_lut_names = ['thermal_upwelling',
                                       'thermal_downwelling'] + self.modtran_lut_names
@@ -142,6 +149,7 @@ class ModtranRT(TabularRT):
         """Load a '.chn' output file and parse critical coefficient vectors.
 
            These are:
+<<<<<<< HEAD
              * wl      - wavelength vector
              * sol_irr - solar irradiance
              * sphalb  - spherical sky albedo at surface
@@ -157,6 +165,23 @@ class ModtranRT(TabularRT):
 
             * thermal_upwelling - atmospheric path radiance
             * thermal_downwelling - sky-integrated thermal path radiance
+=======
+             wl      - wavelength vector
+             sol_irr - solar irradiance
+             sphalb  - spherical sky albedo at surface
+             transm  - diffuse and direct irradiance along the
+                          sun-ground-sensor path
+             transup - transmission along the ground-sensor path only
+             trans_dir - direct upwelling tranmittence
+             trans_dif - diffuse upwelling tranmittence
+            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             Be careful with these! They are to be used only by the
+             modtran_tir functions because MODTRAN must be run with a
+             reflectivity of 1 for them to be used in the RTM defined
+             in radiative_transfer.py.
+             thermal_upwelling - atmospheric path radiance
+             thermal_downwelling - sky-integrated thermal path radiance
+>>>>>>> test
                 reflected off the ground and back into the sensor.
 
            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -166,7 +191,10 @@ class ModtranRT(TabularRT):
         with open(infile) as f:
             sols, transms, sphalbs, wls, rhoatms, transups = \
                 [], [], [], [], [], []
+            transm_dir, transm_dif = [], []
+
             thermal_upwellings, thermal_downwellings = [], []
+
             lines = f.readlines()
             for i, line in enumerate(lines):
                 if i < 5:
@@ -181,6 +209,8 @@ class ModtranRT(TabularRT):
                 sphalb = float(toks[23])
                 transm = float(toks[22]) + float(toks[21])
                 transup = float(toks[24])
+                A_coeff = float(toks[21])
+                B_coeff = float(toks[22])
 
                 # Be careful with these! See note in function comments above
                 thermal_emission = float(toks[11])
@@ -199,12 +229,16 @@ class ModtranRT(TabularRT):
                 rhoatms.append(rhoatm)
                 transups.append(transup)
 
+                transm_dir.append(A_coeff)
+                transm_dif.append(B_coeff)
+
                 thermal_upwellings.append(thermal_upwelling)
                 thermal_downwellings.append(thermal_downwelling)
 
                 wls.append(wl)
         params = [np.array(i) for i in [wls, sols, rhoatms, transms, sphalbs,
-                                        transups, thermal_upwellings, thermal_downwellings]]
+                                        transups, transm_dir, transm_dif,
+                                        thermal_upwellings, thermal_downwellings]]
         return tuple(params)
 
     def ext550_to_vis(self, ext550):
@@ -428,7 +462,7 @@ class ModtranRT(TabularRT):
         # the modtran_tir functions as they require the modtran reflectivity
         # be set to 1 in order to use them in the RTM in radiative_transfer.py.
         # Don't add these to the VSWIR functions!
-        names = ['wl', 'sol', 'rhoatm', 'transm', 'sphalb', 'transup']
+        names = ['wl', 'sol', 'rhoatm', 'transm', 'sphalb', 'transup', 'transm_dir', 'transm_dif']
 
         # Don't include the thermal terms in VSWIR runs to avoid incorrect usage
         if self.treat_as_emissive:
@@ -539,7 +573,16 @@ class ModtranRT(TabularRT):
         rdn = (self.solar_irr*self.coszen) / np.pi * r['transm']
         return rdn
 
+<<<<<<< HEAD
     def _get_L_down_transmitted_tir(self, x_RT, geom):
+=======
+    def get_illumination(self, x_RT, geom):
+        r = self.get(x_RT, geom)
+        rdn = (self.solar_irr*self.coszen) / np.pi
+        return rdn
+
+    def get_L_down_transmitted_tir(self, x_RT, geom):
+>>>>>>> test
         """thermal_downwelling already includes the transmission factor. Also
         assume there is no multiple scattering for TIR.
         """
