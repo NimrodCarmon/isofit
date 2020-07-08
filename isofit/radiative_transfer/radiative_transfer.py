@@ -123,7 +123,14 @@ class RadiativeTransfer():
         ret = L_atm + \
             L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl) + \
             L_up
-
+        
+        '''
+        ret = L_atm + \
+            I / (1.0-r['sphalb'] * bck_rfl) * nb_rfl * r['transm_dif'] + \
+            I / (1.0-r['sphalb'] * bck_rfl) * 0.86 * rfl * r['transm_dir'] + \
+            L_up
+        '''
+        
         return ret
 
     def get_L_atm(self, x_RT, geom):
