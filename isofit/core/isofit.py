@@ -34,7 +34,7 @@ from isofit.inversion.inverse_mcmc import MCMCInversion
 from isofit.core.fileio import IO
 from isofit.configs import configs
 
-
+import pdb
 class Isofit:
     """Initialize the Isofit class.
 
@@ -76,7 +76,7 @@ class Isofit:
         # Load configuration file
         self.config = configs.create_new_config(config_file)
         self.config.get_config_errors()
-
+        #pdb.set_trace()
         # Initialize ray for parallel execution
         rayargs = {'address': self.config.implementation.ip_head,
                    'redis_password': self.config.implementation.redis_password,

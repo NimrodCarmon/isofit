@@ -34,14 +34,12 @@ from ..core.common import json_load_ascii, recursive_replace
 from ..core.common import VectorInterpolator
 from isofit.configs.sections.radiative_transfer_config import RadiativeTransferEngineConfig
 from isofit.configs import Config
-<<<<<<< HEAD
+
 from isofit.core.geometry import Geometry
-=======
+
 
 import pdb
 
->>>>>>> test
-import subprocess
 
 
 
@@ -573,23 +571,18 @@ class ModtranRT(TabularRT):
         rdn = (self.solar_irr*self.coszen) / np.pi * r['transm']
         return rdn
 
-<<<<<<< HEAD
-    def _get_L_down_transmitted_tir(self, x_RT, geom):
-=======
     def get_illumination(self, x_RT, geom):
         r = self.get(x_RT, geom)
         rdn = (self.solar_irr*self.coszen) / np.pi
         return rdn
 
     def get_L_down_transmitted_tir(self, x_RT, geom):
->>>>>>> test
         """thermal_downwelling already includes the transmission factor. Also
         assume there is no multiple scattering for TIR.
         """
         r = self.get(x_RT, geom)
         return r['thermal_downwelling']
 
-<<<<<<< HEAD
     def get_L_up(self, x_RT, geom):
         """Thermal emission from the ground is provided by the thermal model,
         so this function is a placeholder for future upgrades."""
@@ -598,18 +591,6 @@ class ModtranRT(TabularRT):
     def wl2flt(self, wls, fwhms, outfile):
         """Helper function to generate Gaussian distributions around the
         center wavelengths."""
-=======
-    def wl2flt(self, wavelengths: np.array, fwhms: np.array, outfile: str) -> None:
-        """Helper function to generate Gaussian distributions around the
-        center wavelengths.
-
-        Args:
-            wavelengths: wavelength centers
-            fwhms: full width at half max
-            outfile: file to write to
-
-        """
->>>>>>> 61e0e479a5e0e1410fa823659050cd1ac630e336
 
         sigmas = fwhms/2.355
         span = 2.0 * (wavelengths[1]-wavelengths[0])  # nm

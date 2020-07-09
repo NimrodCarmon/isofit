@@ -130,21 +130,6 @@ class RadiativeTransfer():
         r = self.get(x_RT, geom)
         L_atm = self.get_L_atm(x_RT, geom)
         L_down_transmitted = self.get_L_down_transmitted(x_RT, geom)
-<<<<<<< HEAD
-        L_up = Ls * r['transup']
-
-        ret = L_atm + \
-            L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl) + \
-            L_up
-        
-        '''
-        ret = L_atm + \
-            I / (1.0-r['sphalb'] * bck_rfl) * nb_rfl * r['transm_dif'] + \
-            I / (1.0-r['sphalb'] * bck_rfl) * 0.86 * rfl * r['transm_dir'] + \
-            L_up
-        '''
-        
-=======
 
         L_up = self.get_L_up(x_RT, geom)
         L_up = L_up + Ls * r['transup']
@@ -157,19 +142,18 @@ class RadiativeTransfer():
         #trans_dir = self.get_transm_dir
         #trans_dif = self.get_trans_dif
         I = self.get_Solar_Illumination(x_RT, geom)
-        bck_rfl = self.get_background_reflectance()
-        neigh_rfl = self.get_neighbor_reflectance()
+        #bck_rfl = self.get_background_reflectance()
+        #neigh_rfl = self.get_neighbor_reflectance()
         #nbr_rfl =
-        #bck_rfl = rfl
-        #neigh_rfl = rfl
+        bck_rfl = rfl
+        neigh_rfl = rfl
         #pdb.set_trace()
         ret = L_atm + \
             I / (1.0-r['sphalb'] * bck_rfl) * neigh_rfl * r['transm_dif'] + \
-            I / (1.0-r['sphalb'] * bck_rfl) * 0.86 * rfl * r['transm_dir'] + \
+            I / (1.0-r['sphalb'] * bck_rfl) * 1 * rfl * r['transm_dir'] + \
             L_up
         #pdb.set_trace()
 
->>>>>>> test
         return ret
 
 

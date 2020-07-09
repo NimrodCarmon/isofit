@@ -356,12 +356,6 @@ class Inversion:
                 logging.warning('Optimization failed to converge')
                 solutions.append(trajectory)
                 costs.append(9e99)
-<<<<<<< HEAD
-=======
-        #pdb.set_trace()
-        return np.array(solutions[np.argmin(costs)])
-        #return np.array(solutions)
->>>>>>> test
 
         final_solution = np.array(solutions[np.argmin(costs)])
         return final_solution
