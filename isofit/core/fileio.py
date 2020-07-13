@@ -668,7 +668,7 @@ class IO:
 
                     # black line
                     idx = np.where(np.logical_and(wl > lo, wl < hi))[0]
-                    p2 = plt.plot(wl[idx], lamb_est[idx], 'k', linewidth=2)
+                    p2 = plt.plot(wl[idx], x[idx], 'k', linewidth=2)
                     ymax = max(max(lamb_est[idx]*1.2), ymax)
 
                     # red line

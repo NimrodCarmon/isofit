@@ -31,7 +31,7 @@ from ..core.common import expand_path, json_load_ascii
 
 def surface_model(config_file: str) -> None:
     """The surface model tool contains everything you need to build basic
-    multicomponent (i.e. colleciton of Gaussian) surface priors for the
+    multicomponent (i.e. collection of Gaussians) surface priors for the
     multicomponent surface model.
 
     Args:

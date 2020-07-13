@@ -26,7 +26,7 @@ from ..core.common import svd_inv
 from .surface import Surface
 from isofit.configs import Config
 
-
+import pdb
 class MultiComponentSurface(Surface):
     """A model of the surface based on a collection of multivariate 
     Gaussians, with one or more equiprobable components and full 
@@ -207,6 +207,7 @@ class MultiComponentSurface(Surface):
         nsuffix = self.n_state - self.idx_lamb[-1] - 1
         prefix = np.zeros((self.n_wl, nprefix))
         suffix = np.zeros((self.n_wl, nsuffix))
+        #pdb.set_trace()
         return np.concatenate((prefix, dlamb, suffix), axis=1)
 
     def calc_Ls(self, x_surface, geom):

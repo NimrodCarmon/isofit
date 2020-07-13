@@ -494,6 +494,7 @@ class ModtranRT(TabularRT):
             interpolated modtran result
 
         """
+        #pdb.set_trace()
         point = np.zeros((self.n_point,))
         for point_ind, name in enumerate(self.lut_grid_config):
             if name in self.statevector_names:

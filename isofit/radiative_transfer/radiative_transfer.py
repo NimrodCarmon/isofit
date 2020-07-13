@@ -131,8 +131,8 @@ class RadiativeTransfer():
         L_atm = self.get_L_atm(x_RT, geom)
         L_down_transmitted = self.get_L_down_transmitted(x_RT, geom)
 
-        L_up = self.get_L_up(x_RT, geom)
-        L_up = L_up + Ls * r['transup']
+        #L_up = self.get_L_up(x_RT, geom)
+        L_up = Ls * r['transup']
         '''
         ret = L_atm + \
             L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl) + \
@@ -145,9 +145,13 @@ class RadiativeTransfer():
         #bck_rfl = self.get_background_reflectance()
         #neigh_rfl = self.get_neighbor_reflectance()
         #nbr_rfl =
+        
+        #pdb.set_trace()
+        #a = 0.95
+        #rfl_t = a*rfl/(1-(1-a)*rfl)
         bck_rfl = rfl
         neigh_rfl = rfl
-        #pdb.set_trace()
+        
         ret = L_atm + \
             I / (1.0-r['sphalb'] * bck_rfl) * neigh_rfl * r['transm_dif'] + \
             I / (1.0-r['sphalb'] * bck_rfl) * 1 * rfl * r['transm_dir'] + \

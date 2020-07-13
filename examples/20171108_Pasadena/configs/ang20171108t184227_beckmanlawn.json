@@ -48,6 +48,13 @@
           "prior_mean": 0.05,
           "prior_sigma":0.2,
           "init": 0.05
+        },
+        "phi": {
+          "bounds": [0.8, 1],
+          "scale": 0.01,
+          "prior_mean": 0.9,
+          "prior_sigma":0.2,
+          "init": 0.9
         }
       },
       "lut_grid": {

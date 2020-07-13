@@ -171,7 +171,7 @@ class Isofit:
         The idea is to avoid reading the entire file into memory, or hitting
         the physical disk too often. These are our main class variables.
         """
-
+        #pdb.set_trace()
         n_iter = len(self.io.iter_inds)
         self._clear_nonpicklable_objects()
         self.io = None

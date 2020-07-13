@@ -29,9 +29,9 @@ from .instrument import Instrument
 from ..radiative_transfer.radiative_transfer import RadiativeTransfer
 from isofit.configs import Config
 
-from isofit.surface import Surface, ThermalSurface, MultiComponentSurface, GlintSurface
+from isofit.surface import Surface, ThermalSurface, MultiComponentSurface, GlintSurface, IntimateSurface 
 
-
+import pdb
 ### Classes ###
 
 class ForwardModel:
@@ -83,6 +83,8 @@ class ForwardModel:
             self.surface = GlintSurface(self.full_config)
         elif self.config.surface.surface_category == 'thermal_surface':
             self.surface = ThermalSurface(self.full_config)
+        elif self.config.surface.surface_category == 'intimate_surface':
+            self.surface = IntimateSurface(self.full_config)
         else:
             raise ValueError('Must specify a valid surface model')
             # No need to be more specific - should have been checked in config already
