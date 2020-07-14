@@ -580,7 +580,7 @@ class IO:
             meas_Cov = self.fm.Seps(x, meas, geom)
             lamb_est, meas_est, path_est, S_hat, K, G = \
                 self.iv.forward_uncertainty(state_est, meas, geom)
-            A = np.matmul(K, G)
+            A = np.matmul(G, K)
 
             # Form the MATLAB dictionary object and write to file
             mdict = {
@@ -635,7 +635,12 @@ class IO:
                 # Calculate intermediate solutions
                 lamb_est, meas_est, path_est, S_hat, K, G = \
                     self.iv.forward_uncertainty(state_est, meas, geom)
-
+                a = x_surface[425]
+                a_dof = A[425,425]
+                b = x_surface[426]
+                b_dof = A[426,426]
+                aerosols = x_RT[0]
+                water = x_RT[1]
                 plt.cla()
                 red = [0.7, 0.2, 0.2]
                 wl, fwhm = self.fm.calibration(x)
@@ -648,18 +653,20 @@ class IO:
                     p1 = plt.plot(wl[idx], meas[idx], color=red, linewidth=2)
                     p2 = plt.plot(wl, meas_est, color='k', linewidth=1)
                 plt.title("Radiance")
-                plt.title("Measurement (Scaled DN)")
+                #plt.title("Measurement (Scaled DN)")
                 ymax = max(meas)*1.25
                 ymax = max(meas)+0.01
                 ymin = min(meas)-0.01
-                plt.text(500, ymax*0.92, "Measured", color=red)
-                plt.text(500, ymax*0.86, "Model", color='k')
+                #plt.text(500, ymax*0.92, "Measured", color=red)
+                #plt.text(500, ymax*0.86, "Model", color='k')
+                plt.legend(('Measured', 'Modeled'))
                 plt.ylabel(r"$\mu$W nm$^{-1}$ sr$^{-1}$ cm$^{-2}$")
-                plt.ylabel("Intensity")
+                #plt.ylabel("Intensity")
                 plt.xlabel("Wavelength (nm)")
                 plt.ylim([-0.001, ymax])
                 plt.ylim([ymin, ymax])
                 plt.xlim([xmin, xmax])
+                plt.grid(True, which='both', axis='both')
 
                 plt.subplot(1, 2, 2)
                 lamb_est = self.fm.calc_lamb(x, geom)
@@ -692,19 +699,24 @@ class IO:
                             mu = self.fm.surface.components[j][0] * z
                             plt.plot(self.fm.surface.wl[idx], mu[idx], 'g:',
                                      linewidth=1)
-                plt.text(500, ymax*0.86, "Remote estimate", color='k')
+                plt.text(500, 0.75, "a = %.2f\na(DOF) = %.2f\nb = %.2f\nb(DOF)=%.2f" \
+                %(a, a_dof, b, b_dof), color='k')
+                plt.text(1500, 0.7, "aerosols = %.2f\nwater = %.2f" \
+                %(aerosols, water), color='k')
+                #plt.legend(('Remote Estimate'))
                 if 'reference_reflectance_file' in self.infiles:
-                    plt.text(500, ymax*0.92, "In situ reference", color=red)
+                    plt.legend(('Remote Estimate', 'Reference (in-situ)'), loc='upper right')
                 if hasattr(self.fm.surface, 'components') and \
                         self.output.plot_surface_components:
                     plt.text(500, ymax*0.80, "Prior mean state ",
                              color='b')
                     plt.text(500, ymax*0.74, "Surface components ",
                              color='g')
-                plt.ylim([-0.0010, ymax])
+                plt.ylim([-0.0010, 1])
                 plt.xlim([xmin, xmax])
                 plt.title("Reflectance")
-                plt.title("Source Model")
+                plt.grid(True, which='both', axis='both')
+                #plt.title("Source Model")
                 plt.xlabel("Wavelength (nm)")
                 fn = os.path.join(self.output.plot_directory, ('frame_%i.png' % i))
                 plt.savefig(fn)

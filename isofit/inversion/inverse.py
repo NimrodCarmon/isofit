@@ -91,7 +91,7 @@ class Inversion:
 
         self.x_fixed = None
 
-        # TODO: consider brinigng in least_squares_parameters from config
+        # TODO: consider bringing in least_squares_parameters from config
         # Configure Levenberg-Marquardt
         self.least_squares_params = {
             'method': 'trf',
