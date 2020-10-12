@@ -70,7 +70,7 @@ class Inversion:
 
         self.integration_grid = OrderedDict(config.integration_grid)
         self.grid_as_starting_points = config.inversion_grid_as_preseed
-
+        #pdb.set_trace()
         if self.grid_as_starting_points:
             # We're using the integration grid to preseed, not fix values.  So
             # Track the grid, but don't fix the integration grid points
@@ -293,9 +293,10 @@ class Inversion:
             if self.grid_as_starting_points is False:
                 self.x_fixed = combo
             trajectory = []
-
+            #pdb.set_trace()
             # Calculate the initial solution, if needed.
-            x0 = invert_simple(self.fm, meas, geom)
+            #self.fm.RT.init[2] = combo
+            x0 = invert_simple(self.fm, meas, geom, combo)
             x0 = x0[self.inds_free]
 
             # Catch any state vector elements outside of bounds
@@ -334,7 +335,7 @@ class Inversion:
             def err(x_free):
                 """Short wrapper function for use with scipy opt and logging"""
                 residual, x = self.loss_function(x_free, geom, Seps_inv_sqrt, meas)
-
+                #pdb.set_trace()
                 trajectory.append(x)
 
                 it = len(trajectory)
@@ -347,6 +348,7 @@ class Inversion:
 
             # Initialize and invert
             try:
+                #pdb.set_trace()
                 xopt = least_squares(err, x0, jac=jac, **self.least_squares_params)
                 x_full_solution = self.full_statevector(xopt.x)
                 trajectory.append(x_full_solution)

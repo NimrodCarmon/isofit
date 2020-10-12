@@ -182,8 +182,10 @@ class TabularRT:
         rebuild_cmds = []
         for point, fn in zip(self.points, self.files):
             try:
-                cmd = self.rebuild_cmd(point, fn)
-                rebuild_cmds.append(cmd)
+                #cmd = self.rebuild_cmd(point, fn)
+                #rebuild_cmds.append(cmd)
+                print("would have recalculate the LUT")
+                pass
             except FileExistsError:
                 pass
 

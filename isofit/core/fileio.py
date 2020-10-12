@@ -573,7 +573,7 @@ class IO:
 
             x_surface, x_RT, x_instrument = self.fm.unpack(x)
             Kb = self.fm.Kb(x, geom)
-            xinit = invert_simple(self.fm, meas, geom)
+            xinit = invert_simple(self.fm, meas, geom, [x_RT[2], x_RT[3]])
             Sy = self.fm.instrument.Sy(meas, geom)
             cost_jac_prior = np.diagflat(x - xa).dot(Sa_inv_sqrt)
             cost_jac_meas = Seps_inv_sqrt.dot(K[self.iv.winidx, :])
@@ -634,11 +634,19 @@ class IO:
 
                 # Calculate intermediate solutions
                 lamb_est, meas_est, path_est, S_hat, K, G = \
-                    self.iv.forward_uncertainty(state_est, meas, geom)
+                    self.iv.forward_uncertainty(states[i], meas, geom)
+                x_surface, x_RT, x_instrument = self.fm.unpack(states[i])
+                A = np.matmul(G, K)
                 a = x_surface[425]
                 a_dof = A[425,425]
                 b = x_surface[426]
                 b_dof = A[426,426]
+                c = x_RT[2] # target shadow 
+                c_dof = A[429,429]
+                #d = x_RT[3] # neighbors shadow 
+                #d_dof = A[430, 430]
+                e = x_RT[3] # sky view 
+                e_dof = A[430, 430]
                 aerosols = x_RT[0]
                 water = x_RT[1]
                 plt.cla()
@@ -699,10 +707,10 @@ class IO:
                             mu = self.fm.surface.components[j][0] * z
                             plt.plot(self.fm.surface.wl[idx], mu[idx], 'g:',
                                      linewidth=1)
-                plt.text(500, 0.75, "a = %.2f\na(DOF) = %.2f\nb = %.2f\nb(DOF)=%.2f" \
-                %(a, a_dof, b, b_dof), color='k')
-                plt.text(1500, 0.7, "aerosols = %.2f\nwater = %.2f" \
-                %(aerosols, water), color='k')
+                plt.text(500, 0.75, "Intimate = %.2f\nInt(DOF) = %.2f\nGain = %.2f\nGain(DOF) = %.2f\nShadow = %.2f\nSh_t(DOF) = %.2f" \
+                %(a, a_dof, b, b_dof, c, c_dof), color='k')
+                plt.text(1500, 0.7, "aerosols = %.2f\nwater = %.2f\nSky View = %.2f\n Sky(DOF) = %.2f" \
+                %(aerosols, water, e, e_dof), color='k')
                 #plt.legend(('Remote Estimate'))
                 if 'reference_reflectance_file' in self.infiles:
                     plt.legend(('Remote Estimate', 'Reference (in-situ)'), loc='upper right')

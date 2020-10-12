@@ -42,23 +42,23 @@ class IntimateSurface(MultiComponentSurface):
         # Handle additional state vector elements
         ''' the a parameter for intimate mixtures '''
         self.statevec_names.extend(['Areal_Mix_Ratio'])
-        self.init.extend([0.99])  # This is overwritten below
-        self.scale.extend([0.05])
-        self.bounds.extend([[0.6, 1]])
+        self.init.extend([0.75])  # This is overwritten below
+        self.scale.extend([0.5])
+        self.bounds.extend([[0.4, 1]])
         self.areal_mix_ind = len(self.statevec_names) - 1
         self.n_state = len(self.init)
-        self.areal_mix_prior_mu = 0.8
-        self.areal_mix_prior_sigma = 0.2
+        self.areal_mix_prior_mu = 0.75
+        self.areal_mix_prior_sigma = 0.5
         
         ''' the b parameter for shadow fraction '''
-        self.statevec_names.extend(['Shadow_fraction'])
-        self.init.extend([0.99])  # This is overwritten below
+        self.statevec_names.extend(['Gain_coeff'])
+        self.init.extend([1])  # This is overwritten below
         self.scale.extend([0.05])
-        self.bounds.extend([[0.6, 1]])
-        self.shadow_fraction_ind = len(self.statevec_names) - 1
+        self.bounds.extend([[0.5, 1.5]])
+        self.Gain_coeff_ind = len(self.statevec_names) - 1
         self.n_state = len(self.init)
-        self.shadow_fraction_prior_mu = 0.8
-        self.shadow_fraction_prior_sigma = 0.2
+        self.Gain_coeff_prior_mu = 1.0
+        self.Gain_coeff_prior_sigma = 0.5
 
     def xa(self, x_surface, geom):
         """Mean of prior distribution, calculated at state x.  We find
@@ -67,7 +67,7 @@ class IntimateSurface(MultiComponentSurface):
 
         mu = MultiComponentSurface.xa(self, x_surface, geom)
         mu[self.areal_mix_ind] = self.areal_mix_prior_mu
-        mu[self.shadow_fraction_ind] = self.shadow_fraction_prior_mu
+        mu[self.Gain_coeff_ind] = self.Gain_coeff_prior_mu
         return mu
 
     def Sa(self, x_surface, geom):
@@ -76,8 +76,8 @@ class IntimateSurface(MultiComponentSurface):
         Cov = MultiComponentSurface.Sa(self, x_surface, geom)
         Cov[self.areal_mix_ind, self.areal_mix_ind] = \
             self.areal_mix_prior_sigma**2
-        Cov[self.shadow_fraction_ind, self.shadow_fraction_ind] = \
-            self.shadow_fraction_prior_sigma**2
+        Cov[self.Gain_coeff_ind, self.Gain_coeff_ind] = \
+            self.Gain_coeff_prior_sigma**2
             
 
         return Cov
@@ -87,7 +87,7 @@ class IntimateSurface(MultiComponentSurface):
 
         x_surface = MultiComponentSurface.fit_params(self, rfl_meas, geom)
         x_surface[self.areal_mix_ind] = self.init[self.areal_mix_ind]
-        x_surface[self.shadow_fraction_ind] = self.init[self.shadow_fraction_ind]
+        x_surface[self.Gain_coeff_ind] = self.init[self.Gain_coeff_ind]
         
 
         return x_surface
@@ -108,7 +108,7 @@ class IntimateSurface(MultiComponentSurface):
     def calc_lamb(self, x_surface, geom):
         """Lambertian Reflectance."""
         a = x_surface[self.areal_mix_ind]
-        b = x_surface[self.shadow_fraction_ind]
+        b = x_surface[self.Gain_coeff_ind]
         rfl_n = MultiComponentSurface.calc_lamb(self, x_surface, geom) #subsets with wl idxs 
         rfl = b*a*rfl_n/(1-(1-a)*rfl_n)
         
@@ -116,13 +116,13 @@ class IntimateSurface(MultiComponentSurface):
 
     def dlamb_dsurface(self, x_surface, geom):
         """Partial derivative of Lambertian reflectance with respect to state 
-        vector, calculated at x_surface. The dimensions of this are n_bands*n_bands+1"""
+        vector, calculated at x_surface. The dimensions of this are n_bands*n_bands+2"""
         
         # Analytic Solution:
         dlamb = np.zeros((self.n_wl, self.n_wl+1))
         rfl = self.calc_lamb(x_surface, geom)
         a = x_surface[self.areal_mix_ind]
-        b = x_surface[self.shadow_fraction_ind]
+        b = x_surface[self.Gain_coeff_ind]
         #print(b)
         denom = (1-(1-a)*rfl)
         dlamb_drfl = b*a/(denom**2)

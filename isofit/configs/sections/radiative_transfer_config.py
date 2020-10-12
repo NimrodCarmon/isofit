@@ -133,7 +133,7 @@ class RadiativeTransferEngineConfig(BaseConfigSection):
     def _check_config_validity(self) -> List[str]:
         errors = list()
 
-        valid_rt_engines = ['modtran', 'libradtran', '6s']
+        valid_rt_engines = ['modtran', 'modtran_multi', 'libradtran', '6s']
         if self.engine_name not in valid_rt_engines:
             errors.append('radiative_transfer->raditive_transfer_model: {} not in one of the available models: {}'.
                           format(self.engine_name, valid_rt_engines))

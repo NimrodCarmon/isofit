@@ -23,6 +23,7 @@ import logging
 
 from ..core.common import eps
 from ..radiative_transfer.modtran import ModtranRT
+from ..radiative_transfer.multi_modtran import MultiModtranRT
 from ..radiative_transfer.six_s import SixSRT
 from ..radiative_transfer.libradtran import LibRadTranRT
 from isofit.configs import Config
@@ -58,6 +59,8 @@ class RadiativeTransfer():
 
             if rte_config.engine_name == 'modtran':
                 rte = ModtranRT(rte_config, full_config)
+            elif rte_config.engine_name == 'modtran_multi':
+                rte = MultiModtranRT(rte_config, full_config)
             elif rte_config.engine_name == 'libradtran':
                 rte = LibRadTranRT(rte_config, full_config)
             elif rte_config.engine_name == '6s':
@@ -126,13 +129,16 @@ class RadiativeTransfer():
         The global tranmittence is the sum of the A and B coefficients calculated by modtran, convolved and written to .chn.
 
         '''
-        #pdb.set_trace()
+        
         r = self.get(x_RT, geom)
+        c_t = x_RT[2] #Shadow fraction for target pixel
+        #c_n = x_RT[3] # Shadow fraction for neigbhroing pixel
+        sky = x_RT[3] # Sky view factor 
+        #rint(c)
         L_atm = self.get_L_atm(x_RT, geom)
         L_down_transmitted = self.get_L_down_transmitted(x_RT, geom)
-
         #L_up = self.get_L_up(x_RT, geom)
-        L_up = Ls * r['transup']
+        L_up = Ls * r['t_up_dir']
         '''
         ret = L_atm + \
             L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl) + \
@@ -142,21 +148,26 @@ class RadiativeTransfer():
         #trans_dir = self.get_transm_dir
         #trans_dif = self.get_trans_dif
         I = self.get_Solar_Illumination(x_RT, geom)
-        #bck_rfl = self.get_background_reflectance()
+        bck_rfl = self.get_background_reflectance()
         #neigh_rfl = self.get_neighbor_reflectance()
         #nbr_rfl =
         
         #pdb.set_trace()
         #a = 0.95
         #rfl_t = a*rfl/(1-(1-a)*rfl)
-        bck_rfl = rfl
+        rfl = rfl
+        #bck_rfl = rfl
         neigh_rfl = rfl
-        
+        '''
         ret = L_atm + \
-            I / (1.0-r['sphalb'] * bck_rfl) * neigh_rfl * r['transm_dif'] + \
-            I / (1.0-r['sphalb'] * bck_rfl) * 1 * rfl * r['transm_dir'] + \
+            I / (1.0-r['sphalb'] * c) * neigh_rfl * r['transm_dif'] + \
+            I / (1.0-r['sphalb'] * c) * 1 * rfl * r['transm_dir'] + \
             L_up
+        '''
         #pdb.set_trace()
+        ret = I * r['rho_atm'] + \
+            I / (1.0 - r['s_albedo'] * rfl) * (0.5 * r['t_down_dir'] + sky*r['t_down_dif']) * rfl * r['t_up_dif'] + \
+            I / (1.0 - r['s_albedo'] * rfl) * (c_t * r['t_down_dir'] + sky*r['t_down_dif']) * rfl * r['t_up_dir']
 
         return ret
 
@@ -175,7 +186,7 @@ class RadiativeTransfer():
         return ref
 
     def get_background_reflectance(self):
-        file2use = 'outputs/background_ref.txt'
+        file2use = '/Users/carmon/Documents/isofit/examples/20171108_Pasadena/output/adjecnt_beckman_audi.txt'
         ref = np.asarray(load_spectrum(file2use))
         ref = ref[0,:]
         return ref
@@ -215,10 +226,10 @@ class RadiativeTransfer():
         # L_down_transmitted * rfl / (1.0 - r['sphalb'] * rfl), or
         # L_down_transmitted * rho_scaled_for_multiscattering
         # This term is the derivative of rho_scaled_for_multiscattering
-        drho_scaled_for_multiscattering_drfl = 1. / (1 - r['sphalb']*rfl)**2
+        drho_scaled_for_multiscattering_drfl = 1. / (1 - r['s_albedo']*rfl)**2
 
         drdn_drfl = L_down_transmitted * drho_scaled_for_multiscattering_drfl
-        drdn_dLs = r['transup']
+        drdn_dLs = r['t_up_dir']
         K_surface = drdn_drfl[:, np.newaxis] * drfl_dsurface + \
             drdn_dLs[:, np.newaxis] * dLs_dsurface
 

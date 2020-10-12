@@ -25,9 +25,9 @@ from scipy.optimize import minimize
 
 from isofit.core.common import emissive_radiance, eps
 from isofit.radiative_transfer.radiative_transfer import RadiativeTransfer
-
-
-def heuristic_atmosphere(RT: RadiativeTransfer, instrument, x_RT, x_instrument,  meas, geom):
+import matplotlib.pyplot as plt 
+import pdb
+def heuristic_atmosphere(RT: RadiativeTransfer, instrument, x_RT, x_instrument,  meas, geom, c=1, d=1):
     """From a given radiance, estimate atmospheric state with band ratios.
     Used to initialize gradient descent inversions."""
 
@@ -66,7 +66,9 @@ def heuristic_atmosphere(RT: RadiativeTransfer, instrument, x_RT, x_instrument, 
         ind_lut = my_RT.lut_names.index(h2oname)
         ind_sv = RT.statevec_names.index(h2oname)
         h2os, ratios = [], []
-
+        #c = x_RT[2] # shadow fraction preseed 
+        #c = 0.1
+        print(c)
         # We iterate through every possible grid point in the lookup table,
         # calculating the band ratio that we would see if this were the
         # atmospheric H2O content.  It assumes that defaults for all other
@@ -77,15 +79,17 @@ def heuristic_atmosphere(RT: RadiativeTransfer, instrument, x_RT, x_instrument, 
             x_RT_2 = x_RT.copy()
             x_RT_2[ind_sv] = h2o
             rhi = RT.get(x_RT_2, geom)
-            rhoatm = instrument.sample(x_instrument, RT.wl, rhi['rhoatm'])
-            transm = instrument.sample(x_instrument, RT.wl, rhi['transm'])
-            sphalb = instrument.sample(x_instrument, RT.wl, rhi['sphalb'])
+            rhoatm = instrument.sample(x_instrument, RT.wl, rhi['rho_atm'])
+            transm_low = (c*rhi['t_down_dir']+d*rhi['t_down_dif'])*(rhi['t_up_dir']+rhi['t_up_dif'])
+            transm = instrument.sample(x_instrument, RT.wl, transm_low)
+            sphalb = instrument.sample(x_instrument, RT.wl, rhi['s_albedo'])
             solar_irr = instrument.sample(x_instrument, RT.wl, RT.solar_irr)
 
             # Assume no surface emission.  "Correct" the at-sensor radiance
             # using this presumed amount of water vapor, and measure the
             # resulting residual (as measured from linear interpolation across
             # the absorption feature)
+            #pdb.set_trace()
             rho = meas * np.pi / (solar_irr * RT.coszen)
             r = 1.0 / (transm / (rho - rhoatm) + sphalb)
             ratios.append((r[b945]*2.0)/(r[b1040]+r[b865]))
@@ -101,19 +105,23 @@ def heuristic_atmosphere(RT: RadiativeTransfer, instrument, x_RT, x_instrument, 
 
 
 def invert_algebraic(surface, RT: RadiativeTransfer, instrument, x_surface, 
-        x_RT, x_instrument, meas, geom):
+        x_RT, x_instrument, meas, geom, c=1, d=1):
     """Inverts radiance algebraically using Lambertian assumptions to get a 
         reflectance."""
 
     # Get atmospheric optical parameters (possibly at high
     # spectral resolution) and resample them if needed.
     rhi = RT.get(x_RT, geom)
+    #c = x_RT[2]
+    #c = 0.1 #shaodw fraction 
     wl, fwhm = instrument.calibration(x_instrument)
-    rhoatm = instrument.sample(x_instrument, RT.wl, rhi['rhoatm'])
-    transm = instrument.sample(x_instrument, RT.wl, rhi['transm'])
+    rhoatm = instrument.sample(x_instrument, RT.wl, rhi['rho_atm'])
+    transm_low = (c*rhi['t_down_dir']+d*rhi['t_down_dif'])*(rhi['t_up_dir']) + \
+        (c*rhi['t_down_dir']+d*rhi['t_down_dif'])*(rhi['t_up_dif'])
+    transm = instrument.sample(x_instrument, RT.wl, transm_low)
     solar_irr = instrument.sample(x_instrument, RT.wl, RT.solar_irr)
-    sphalb = instrument.sample(x_instrument, RT.wl, rhi['sphalb'])
-    transup = instrument.sample(x_instrument, RT.wl, rhi['transup'])
+    sphalb = instrument.sample(x_instrument, RT.wl, rhi['s_albedo'])
+    transup = instrument.sample(x_instrument, RT.wl, rhi['t_up_dir'])
     coszen = RT.coszen
 
     #Prevent NaNs
@@ -127,20 +135,30 @@ def invert_algebraic(surface, RT: RadiativeTransfer, instrument, x_surface,
 
     # Now solve for the reflectance at measured wavelengths,
     # and back-translate to surface wavelengths
+    
     rho = rdn_solrfl * np.pi / (solar_irr * coszen)
     rfl = 1.0 / (transm / (rho - rhoatm) + sphalb)
     rfl_est = interp1d(wl, rfl, fill_value='extrapolate')(surface.wl)
-
+    #pdb.set_trace()
     # Some downstream code will benefit from our precalculated
     # atmospheric optical parameters
     coeffs = rhoatm, sphalb, transm, solar_irr, coszen, transup
     return rfl_est, Ls, coeffs
 
 
-def invert_simple(forward, meas, geom):
+def invert_simple(forward, meas, geom, combo):
     """Find an initial guess at the state vector. This currently uses
     traditional (non-iterative, heuristic) atmospheric correction."""
-
+    #pdb.set_trace()
+    '''a really dirty fix'''
+    #pdb.set_trace()
+    shadow = combo[0]
+    if len(combo)>1:
+        skyview = combo[1]
+    else:
+        skyview = 1.0
+        
+    
     surface = forward.surface
     RT = forward.RT
     instrument = forward.instrument
@@ -149,15 +167,16 @@ def invert_simple(forward, meas, geom):
     # and estimate atmospheric terms using traditional heuristics.
     x = forward.init.copy()
     x_surface, x_RT, x_instrument = forward.unpack(x)
+    #x_RT[2] = shadow_f # preseed on the initial guess 
     x[forward.idx_RT] = heuristic_atmosphere(RT, instrument,
-                                             x_RT, x_instrument,  meas, geom)
+                                             x_RT, x_instrument,  meas, geom, shadow, skyview)
 
     # Now, with atmosphere fixed, we can invert the radiance algebraically
     # via Lambertian approximations to get reflectance
     x_surface, x_RT, x_instrument = forward.unpack(x)
     rfl_est, Ls_est, coeffs = invert_algebraic(surface, RT,
                                                instrument, x_surface, x_RT,
-                                               x_instrument, meas, geom)
+                                               x_instrument, meas, geom, shadow, skyview)
 
     # Condition thermal part on the VSWIR portion. Only works for
     # Multicomponent surfaces. Finds the cluster nearest the VSWIR heuristic
