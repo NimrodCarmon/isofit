@@ -147,7 +147,7 @@ class MultiModtranRT(TabularRT):
         """Load a '.chn' output file and parse critical coefficient vectors.
             Here the channel file has outputs from 3 runs, appended at the buttom
            These are:
-<<<<<<< HEAD
+
              * wl      - wavelength vector
              * sol_irr - solar irradiance
              * sphalb  - spherical sky albedo at surface
@@ -163,7 +163,7 @@ class MultiModtranRT(TabularRT):
 
             * thermal_upwelling - atmospheric path radiance
             * thermal_downwelling - sky-integrated thermal path radiance
-=======
+
              wl      - wavelength vector
              sol_irr - solar irradiance
              sphalb  - spherical sky albedo at surface
@@ -179,10 +179,10 @@ class MultiModtranRT(TabularRT):
              in radiative_transfer.py.
              thermal_upwelling - atmospheric path radiance
              thermal_downwelling - sky-integrated thermal path radiance
->>>>>>> test
+
                 reflected off the ground and back into the sensor.
 
-           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
            We parse them one wavelength at a time."""
 
@@ -425,6 +425,7 @@ class MultiModtranRT(TabularRT):
                 logging.info('H2OOPT found in MODTRAN template - ignoring H2O upper bound')
             else:
                 # Only do this check if we don't have a LUT provided:
+
                 need_to_rebuild = np.any([not self.required_results_exist(x) for x in self.get_lut_filenames()])
                 if need_to_rebuild:
 
@@ -518,9 +519,10 @@ class MultiModtranRT(TabularRT):
                 modtran_config[0]['MODTRANINPUT']['NAME'] = ''
                 current_config[0]['MODTRANINPUT']['SPECTRAL']['FILTNM'] = ''
                 modtran_config[0]['MODTRANINPUT']['SPECTRAL']['FILTNM'] = ''
-                current_str = json.dumps(current_config)
+                current_str = json.dumps(current_config[0]) # we have 3 cases in the config, so pick the 1st
                 modtran_str = json.dumps(modtran_config)
-                rebuild = (modtran_str.strip() != current_str.strip())
+                rebuild = (modtran_str.strip()[1:-1] != current_str.strip())
+
 
         if not rebuild:
             raise FileExistsError('File exists')

@@ -33,7 +33,7 @@ from isofit.configs.sections.radiative_transfer_config import RadiativeTransferE
 from isofit.configs.sections.statevector_config import StateVectorElementConfig
 from isofit.configs.sections.implementation_config import ImplementationConfig
 
-
+import pdb
 ### Functions ###
 
 @ray.remote
@@ -173,20 +173,21 @@ class TabularRT:
        # Build the list of radiative transfer run commands. This
         # rebuild_cmd() function will be overriden by the child class to
         # perform setup activities unique to each RTM.
+        
         rebuild_cmds = []
         for point, fn in zip(self.points, self.files):
             try:
-                #cmd = self.rebuild_cmd(point, fn)
-                #rebuild_cmds.append(cmd)
-                print("would have recalculate the LUT")
+                cmd = self.rebuild_cmd(point, fn)
+                rebuild_cmds.append(cmd)
                 pass
             except FileExistsError:
                 pass
+        
 
         if self.configure_and_exit:
             raise SystemExit
             # sys.exit(0)
-
+            
         elif len(rebuild_cmds) > 0 and self.auto_rebuild:
             logging.info("Rebuilding radiative transfer look up table")
 
