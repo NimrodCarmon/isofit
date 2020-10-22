@@ -1,0 +1,60 @@
+
+                    *************************************************************
+                    *                                                           *
+                    *   MODTRAN(R) 6.0.1r2                                      *
+                    *                                                           *
+                    *   MODTRAN is an atmospheric radiative transfer model      *
+                    *   developed collaboratively by SPECTRAL SCIENCES, INC.    *
+                    *   (SSI) [www.spectral.com] and the AIR FORCE RESEARCH     *
+                    *   LABORATORY (AFRL) [www.kirtland.af.mil/afrl_vs/]        *
+                    *                                                           *
+                    *      Please address questions and/or comments to          *
+                    *      SSI at modtran@spectral.com and/or to AFRL           *
+                    *      at jeannette.van_den_bosch@us.af.mil                 *
+                    *                                                           *
+                    *   WARNING:  Versions of MODTRAN acquired via a            *
+                    *             "GOVERNMENT PURPOSE USE" agreement can        *
+                    *             only be used for Government Purposes.         *
+                    *                                                           *
+                    *   I/O file root name: AOT550-0.1000_H2OSTR-0.5000         *
+                    *                                                           *
+                    *************************************************************
+
+Comment from routine FILTER:  First filter weight for channel    1,
+                              CENTER:  376.86 NM   FWHM:  5.57 NM,
+                              is non-zero.
+
+Comment from routine FILTER:  Last filter weight for channel    1,
+                              CENTER:  376.86 NM   FWHM:  5.57 NM,
+                              is non-zero.
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
+
+Comment from routine KNTRP:  The Lorentz half-width = 0.00000390 cm-1 is less than the table minimum value of 0.00000863 cm-1.
+                             The K-distribution interpolation will be based on the table minimum value.
+                             ***  THIS WARNING WILL NOT BE REPEATED  ***
+
+Warning from routine FLUXES:  A DISORT diffuse downward flux value was negative and
+                              reset to zero.  This warning will not be repeated.
+
+Comment from routine KNTRP:  Effective number of lines = 7.0359E-01 is less than 1.0000E+00
+                             Band model tuning enables the value to be as small as a half.
+
+Comment from routine KNTRP:  The Doppler half-width = 0.02000573 cm-1 exceeds the K-table maximum = 0.02000000 cm-1.
+                             ***  THIS WARNING WILL NOT BE REPEATED  ***
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
+
+Comment from routine FINDMN:  Tangent path with H1ALT =     2.30000 km and OBSZEN = 180.00000 deg intersects the Earth.
+                              H2ALT has been reset from   100.00000 km to     0.35000 km, and LENN reset from 1 to 0.
