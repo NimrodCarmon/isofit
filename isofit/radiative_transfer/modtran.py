@@ -147,7 +147,7 @@ class ModtranRT(TabularRT):
         """Load a '.chn' output file and parse critical coefficient vectors.
 
            These are:
-<<<<<<< HEAD
+
              * wl      - wavelength vector
              * sol_irr - solar irradiance
              * sphalb  - spherical sky albedo at surface
@@ -155,7 +155,7 @@ class ModtranRT(TabularRT):
                           sun-ground-sensor path
              * transup - transmission along the ground-sensor path only
 
-           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             Be careful with these! They are to be used only by the
             modtran_tir functions because MODTRAN must be run with a
             reflectivity of 1 for them to be used in the RTM defined
@@ -163,7 +163,7 @@ class ModtranRT(TabularRT):
 
             * thermal_upwelling - atmospheric path radiance
             * thermal_downwelling - sky-integrated thermal path radiance
-=======
+
              wl      - wavelength vector
              sol_irr - solar irradiance
              sphalb  - spherical sky albedo at surface
@@ -179,10 +179,10 @@ class ModtranRT(TabularRT):
              in radiative_transfer.py.
              thermal_upwelling - atmospheric path radiance
              thermal_downwelling - sky-integrated thermal path radiance
->>>>>>> test
+
                 reflected off the ground and back into the sensor.
 
-           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
            We parse them one wavelength at a time."""
 
@@ -329,15 +329,13 @@ class ModtranRT(TabularRT):
                     cmd = self.rebuild_cmd(point, filebase)
 
                     # Run MODTRAN for up to 10 seconds - this should be plenty of time
-                    cwd = os.getcwd()
                     if os.path.isdir(self.lut_dir) is False:
                         os.mkdir(self.lut_dir)
-                    os.chdir(self.lut_dir)
                     try:
-                        subprocess.call(cmd, shell=True, timeout=10)
+                        subprocess.call(cmd, shell=True, timeout=10,
+                                        cwd=self.lut_dir)
                     except:
                         pass
-                    os.chdir(cwd)
 
 
                     max_water = None
@@ -584,14 +582,24 @@ class ModtranRT(TabularRT):
         r = self.get(x_RT, geom)
         return r['thermal_downwelling']
 
+
     def get_L_up(self, x_RT, geom):
         """Thermal emission from the ground is provided by the thermal model,
         so this function is a placeholder for future upgrades."""
         return 0
 
-    def wl2flt(self, wls, fwhms, outfile):
+
+    def wl2flt(self, wavelengths: np.array, fwhms: np.array, outfile: str) -> None:
         """Helper function to generate Gaussian distributions around the
-        center wavelengths."""
+        center wavelengths.
+
+        Args:
+            wavelengths: wavelength centers
+            fwhms: full width at half max
+            outfile: file to write to
+
+        """
+
 
         sigmas = fwhms/2.355
         span = 2.0 * (wavelengths[1]-wavelengths[0])  # nm
