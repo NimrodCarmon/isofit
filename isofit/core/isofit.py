@@ -27,7 +27,7 @@ import time
 import multiprocessing
 import numpy as np
 import ray
-
+from ray.utils import ActorPool
 from isofit.core.forward import ForwardModel
 from isofit.inversion.inverse import Inversion
 from isofit.inversion.inverse_mcmc import MCMCInversion
@@ -137,51 +137,62 @@ class Isofit:
         self.iv = None
 
     @ray.remote
-    def _run_set_of_spectra(self, index_start: int, index_stop: int) -> None:
-        """Internal function to run a chunk of spectra
+    class Actor(object):
+        def __init__(self):
+            self.idx2do = []
 
-        Args:
-            index_start: spectral index to start execution at
-            index_stop: spectral index to stop execution at
+        def go(self, idx, self_obj_ref):
+            #set up the range to run on 
+            idx_sets = self_obj_ref.index_sets
+            startI = idx_sets(idx)
+            stopI = idx_sets(idx+1)
+            self._run_set_of_spectra(self, startI, stopI)
 
-        """
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=self.loglevel, filename=self.logfile)
-        self._init_nonpicklable_objects()
-        io = IO(self.config, self.fm, self.iv, self.rows, self.cols)
-        for index in range(index_start, index_stop):
-            success, row, col, meas, geom = io.get_components_at_index(
-                index)
-            # Only run through the inversion if we got some data
-            if success:
-                if meas is not None and all(meas < -49.0):
-                    # Bad data flags
-                    self.states = []
-                else:
-                    # The inversion returns a list of states, which are
-                    # intepreted either as samples from the posterior (MCMC case)
-                    # or as a gradient descent trajectory (standard case). For
-                    # a trajectory, the last spectrum is the converged solution.
-                    self.states = self.iv.invert(meas, geom)
+        def _run_set_of_spectra(self, index_start: int, index_stop: int) -> None:
+            """Internal function to run a chunk of spectra
 
-                # Write the spectra to disk
-                try:
-                    io.write_spectrum(row, col, self.states, meas,
-                                      geom, flush_immediately=True)
-                except ValueError as err:
-                    logging.error(err)
-                    logging.info(
-                        """
-                        Encountered the following ValueError in row %d and col %d:
-                        %s.
-                        Results for this pixel will be all zeros.
-                        """, row, col, err
-                    )
-                if (index - index_start) % 100 == 0:
-                    logging.info(
-                        'Core at start index %d completed inversion %d/%d',
-                        index_start, 1+index-index_start,
-                        index_stop-index_start
-                    )
+            Args:
+                index_start: spectral index to start execution at
+                index_stop: spectral index to stop execution at
+
+            """
+            logging.basicConfig(format='%(levelname)s:%(message)s', level=self.loglevel, filename=self.logfile)
+            self._init_nonpicklable_objects()
+            io = IO(self.config, self.fm, self.iv, self.rows, self.cols)
+            for index in range(index_start, index_stop):
+                success, row, col, meas, geom = io.get_components_at_index(
+                    index)
+                # Only run through the inversion if we got some data
+                if success:
+                    if meas is not None and all(meas < -49.0):
+                        # Bad data flags
+                        self.states = []
+                    else:
+                        # The inversion returns a list of states, which are
+                        # intepreted either as samples from the posterior (MCMC case)
+                        # or as a gradient descent trajectory (standard case). For
+                        # a trajectory, the last spectrum is the converged solution.
+                        self.states = self.iv.invert(meas, geom)
+
+                    # Write the spectra to disk
+                    try:
+                        io.write_spectrum(row, col, self.states, meas,
+                                        geom, flush_immediately=True)
+                    except ValueError as err:
+                        logging.error(err)
+                        logging.info(
+                            """
+                            Encountered the following ValueError in row %d and col %d:
+                            %s.
+                            Results for this pixel will be all zeros.
+                            """, row, col, err
+                        )
+                    if (index - index_start) % 100 == 0:
+                        logging.info(
+                            'Core at start index %d completed inversion %d/%d',
+                            index_start, 1+index-index_start,
+                            index_stop-index_start
+                        )
 
     def run(self):
         """
@@ -203,8 +214,17 @@ class Isofit:
         start_time = time.time()
         logging.info('Beginning inversions using {} cores'.format(n_workers))
 
+        # init your actors        
+        Actors = [Actor.remote() for _ in range(n_workers)]
+        pool = ActorPool(Actors)
+        self.index_sets = np.linspace(0, n_iter, num=n_workers+1, dtype=int)
+        self_ref = ray.put(self)
+
+        it = list(pool.map(lambda a, v: a.go.remote(v, self_ref), list(range(len(index_sets)-1)))
+
+
         # Divide up spectra to run into chunks
-        index_sets = np.linspace(0, n_iter, num=n_workers+1, dtype=int)
+        #index_sets = np.linspace(0, n_iter, num=n_workers+1, dtype=int)
 
         # Run spectra, in either serial or parallel depending on n_workers
         results = ray.get([self._run_set_of_spectra.remote(self, index_sets[l], index_sets[l + 1])
