@@ -27,7 +27,7 @@ import time
 import multiprocessing
 import numpy as np
 import ray
-from ray.utils import ActorPool
+from ray.util import ActorPool
 from isofit.core.forward import ForwardModel
 from isofit.inversion.inverse import Inversion
 from isofit.inversion.inverse_mcmc import MCMCInversion
@@ -79,7 +79,7 @@ class Isofit:
 
         # Initialize ray for parallel execution
         rayargs = {'address': self.config.implementation.ip_head,
-                   #'redis_password': self.config.implementation.redis_password,
+                   'redis_password': self.config.implementation.redis_password,
                    'ignore_reinit_error':True,
                    'local_mode': self.config.implementation.n_cores == 1}
 
@@ -144,9 +144,12 @@ class Isofit:
         def go(self, idx, self_obj_ref):
             #set up the range to run on 
             idx_sets = self_obj_ref.index_sets
-            startI = idx_sets(idx)
-            stopI = idx_sets(idx+1)
-            self._run_set_of_spectra(self, startI, stopI)
+            #print(idx_sets)
+            #print(idx)
+            
+            startI = idx_sets[idx]
+            stopI = idx_sets[idx+1]
+            self._run_set_of_spectra(startI, stopI)
 
         def _run_set_of_spectra(self, index_start: int, index_stop: int) -> None:
             """Internal function to run a chunk of spectra
@@ -215,21 +218,18 @@ class Isofit:
         logging.info('Beginning inversions using {} cores'.format(n_workers))
 
         # init your actors        
-        Actors = [Actor.remote() for _ in range(n_workers)]
+        Actors = [Isofit.Actor.remote() for _ in range(n_workers)]
         pool = ActorPool(Actors)
         self.index_sets = np.linspace(0, n_iter, num=n_workers+1, dtype=int)
         self_ref = ray.put(self)
 
-        it = list(pool.map(lambda a, v: a.go.remote(v, self_ref), list(range(len(index_sets)-1)))
+        it = list(pool.map(lambda a, v: a.go.remote(v, self_ref), list(range(len(self.index_sets)-1))))
 
 
         # Divide up spectra to run into chunks
         #index_sets = np.linspace(0, n_iter, num=n_workers+1, dtype=int)
 
         # Run spectra, in either serial or parallel depending on n_workers
-        results = ray.get([self._run_set_of_spectra.remote(self, index_sets[l], index_sets[l + 1])
-                           for l in range(len(index_sets)-1)])
-
         total_time = time.time() - start_time
         logging.info('Inversions complete.  {} s total, {} spectra/s, {} spectra/s/core'.format(
             round(total_time,2), round(n_iter/total_time,4), round(n_iter/total_time/n_workers,4)))
